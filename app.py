@@ -6,6 +6,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re, base64
 
+def truncate(txt: str, n: int = 120) -> str:
+    txt = (txt or "").strip()
+    return (txt[:n] + "…") if len(txt) > n else txt
+
 # ===============================
 # Page config + CSS
 # ===============================
@@ -22,6 +26,12 @@ CUSTOM_CSS = """
 .block.yellow {background:#fffbeb; border:1px solid #fde68a;}
 .footer {margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; color:#64748b; font-size:0.9rem; text-align:center;}
 .small-note {color:#64748b; font-size:0.85rem;}
+@media (max-width: 480px){
+  .header-title{font-size:1.6rem;}
+  .header-sub{font-size:0.9rem;}
+  .block{font-size:0.95rem;}
+  .small-note{font-size:0.8rem;}
+}
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -48,7 +58,7 @@ def centered_logo_html(logo_path: Path, width_px: int = 220) -> str:
         <div class="header-wrap">
             <div class="header-title">HazardBot by Zalemo👷‍♂️🎯</div>
             <div class="header-sub">
-                ype a hazard to review similar incidents reported in the USA (OSHA Severe Injury Reports) 
+                ype a hazard to review  incidents reported in the USA (OSHA Severe Injury Reports) 
                 and get prediction for Event Title, PPE, Training, Root Causes and OSHA reporting time.
             </div>
         </div>
@@ -184,15 +194,28 @@ if hazard_text:
             break
     res_df = pd.DataFrame(rows, columns=["description", "similarity"])
 
-    st.subheader("Similar incidents")
-    st.markdown('<span class="small-note">List ordered by similarity (highest first). Select one to get recommendations.</span>', unsafe_allow_html=True)
+   st.subheader("Similar incidents")
+st.markdown('<span class="small-note">List ordered by similarity (highest first). Select one to get recommendations.</span>', unsafe_allow_html=True)
 
-    # Selectbox (dropdown with scroll)
-    choice = st.selectbox("Select an incident for analysis:", res_df["description"].tolist())
+# Dropdown compacto: muestra truncado en el menú, pero abajo mostramos el texto completo
+options = res_df.index.tolist()
+choice_idx = st.selectbox(
+    "Select an incident for analysis:",
+    options,
+    format_func=lambda i: truncate(res_df.at[i, "description"], 120)
+)
 
-    if choice:
-        pred_raw = model.predict([choice])[0]
-        label = fix_label(choice, pred_raw)
+if choice_idx is not None:
+    choice_text = res_df.at[choice_idx, "description"]
+
+    # Mostrar descripción completa (scroll-friendly en móvil)
+    st.markdown('<div class="small-note">Full incident description:</div>', unsafe_allow_html=True)
+    st.text_area("", value=choice_text, height=150, disabled=True)
+
+    # Predicción automática
+    pred_raw = model.predict([choice_text])[0]
+    label = fix_label(choice_text, pred_raw)
+    nice_label = label.replace("_", " ").title()
 
         # Friendly blocks with emojis
         st.markdown(f'<div class="block green">✅ <b>Predicted Event Title:</b> {label.capitalize()}</div>', unsafe_allow_html=True)
