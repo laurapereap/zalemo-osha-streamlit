@@ -195,7 +195,7 @@ if hazard_text:
         label = fix_label(choice, pred_raw)
 
         # Friendly blocks with emojis
-        st.markdown(f'<div class="block green">✅ <b>Predicted Event Title:</b> {label}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="block green">✅ <b>Predicted Event Title:</b> {label.capitalize()}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="block blue">🧤 <b>Recommended PPE:</b> {", ".join(ppe_map.get(label, ["N/A"]))}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="block blue">🎓 <b>Training Recommendations:</b> {", ".join(training_map.get(label, ["N/A"]))}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="block blue">🧩 <b>Possible Root Causes:</b> {", ".join(root_cause_map.get(label, ["N/A"]))}</div>', unsafe_allow_html=True)
