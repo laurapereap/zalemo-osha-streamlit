@@ -35,7 +35,7 @@ def centered_logo_html(logo_path: Path, width_px: int = 220) -> str:
         return f"""
         <div class="header-wrap">
             <img src="data:image/png;base64,{b64}" width="{width_px}" />
-            <div class="header-title">OSHA Hazard Assistant</div>
+            <div class="header-title">Zalemo Safety Hazard Assistant AI 🦺🤖</div>
             <div class="header-sub">
                 Type a hazard, review similar incidents, and get prediction for Event Title,
                 PPE, Training, Root Causes and OSHA reporting time.
@@ -46,7 +46,7 @@ def centered_logo_html(logo_path: Path, width_px: int = 220) -> str:
         # Fallback if logo not found
         return """
         <div class="header-wrap">
-            <div class="header-title">OSHA Hazard Assistant</div>
+            <div class="header-title">Zalemo Safety Hazard Assistant AI 🦺🤖</div>
             <div class="header-sub">
                 Type a hazard, review similar incidents, and get prediction for Event Title,
                 PPE, Training, Root Causes and OSHA reporting time.
