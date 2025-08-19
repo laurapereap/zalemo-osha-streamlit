@@ -35,10 +35,10 @@ def centered_logo_html(logo_path: Path, width_px: int = 220) -> str:
         return f"""
         <div class="header-wrap">
             <img src="data:image/png;base64,{b64}" width="{width_px}" />
-            <div class="header-title">Zalemo Safety Hazard Assistant AI 🦺🤖</div>
+            <div class="header-title">HazardBot by Zalemo👷‍♂️🎯 </div>
             <div class="header-sub">
-                Type a hazard, review similar incidents, and get prediction for Event Title,
-                PPE, Training, Root Causes and OSHA reporting time.
+                Type a hazard to review similar incidents reported in the USA (OSHA Severe Injury Reports) 
+                and get prediction for Event Title, PPE, Training, Root Causes and OSHA reporting time.
             </div>
         </div>
         """
@@ -46,10 +46,10 @@ def centered_logo_html(logo_path: Path, width_px: int = 220) -> str:
         # Fallback if logo not found
         return """
         <div class="header-wrap">
-            <div class="header-title">Zalemo Safety Hazard Assistant AI 🦺🤖</div>
+            <div class="header-title">HazardBot by Zalemo👷‍♂️🎯</div>
             <div class="header-sub">
-                Type a hazard, review similar incidents, and get prediction for Event Title,
-                PPE, Training, Root Causes and OSHA reporting time.
+                ype a hazard to review similar incidents reported in the USA (OSHA Severe Injury Reports) 
+                and get prediction for Event Title, PPE, Training, Root Causes and OSHA reporting time.
             </div>
         </div>
         """
@@ -205,7 +205,8 @@ if hazard_text:
 # Footer (credits)
 # ===============================
 st.markdown(
-    '<div class="footer">© 2025 Zalemo Corporation — Built by <b>Laura Perea</b>. '
-    'Internal demo for safety support. Not a substitute for professional judgment or legal advice.</div>',
+    '<div class="footer">© 2025 Zalemo Corporation — Built by <b>Laura Perea</b>. Zalemo HazardBot 🤖🦺 — Internal demo for safety support.<br>
+Data source: <a href="https://www.osha.gov/severe-injury-reports" target="_blank">OSHA Severe Injury Reports (2015–2024)</a>.<br>
+Not a substitute for professional judgment or legal advice.</div>',
     unsafe_allow_html=True
 )
