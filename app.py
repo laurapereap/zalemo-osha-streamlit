@@ -205,9 +205,12 @@ if hazard_text:
 # Footer (credits)
 # ===============================
 st.markdown(
-<div class="footer">
-© 2025 Zalemo Corporation — Built by <b>Laura Perea</b>. Zalemo HazardBot 🤖🦺 — Internal demo for safety support.<br>
-Data source: <a href="https://www.osha.gov/severe-injury-reports" target="_blank">OSHA Severe Injury Reports (2015–2024)</a>.<br>
-Not a substitute for professional judgment or legal advice.
-</div>
+    """
+    <div class="footer">
+    © 2025 Zalemo Corporation — Built by <b>Laura Perea</b>. Zalemo HazardBot 🤖🦺 — Internal demo for safety support.<br>
+    Data source: <a href="https://www.osha.gov/severe-injury-reports" target="_blank">OSHA Severe Injury Reports (2015–2024)</a>.<br>
+    Not a substitute for professional judgment or legal advice.
+    </div>
+    """,
+    unsafe_allow_html=True
 )
