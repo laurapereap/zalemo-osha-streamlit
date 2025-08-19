@@ -195,7 +195,7 @@ if hazard_text:
     res_df = pd.DataFrame(rows, columns=["description", "similarity"])
 
    st.subheader("Similar incidents")
-    st.markdown(
+   st.markdown(
         '<span class="small-note">List ordered by similarity (highest first). Select one to get recommendations.</span>',
         unsafe_allow_html=True
     )
