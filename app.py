@@ -45,7 +45,7 @@ def centered_logo_html(logo_path: Path, width_px: int = 220) -> str:
         return f"""
         <div class="header-wrap">
             <img src="data:image/png;base64,{b64}" width="{width_px}" />
-            <div class="header-title">HazardBot by Zalemo👷‍♂️🎯 </div>
+            <div class="header-title">HazardBot by Zalemo👷‍♂️🎯</div>
             <div class="header-sub">
                 Type a hazard to review similar incidents reported in the USA (OSHA Severe Injury Reports) 
                 and get prediction for Event Title, PPE, Training, Root Causes and OSHA reporting time.
@@ -58,7 +58,7 @@ def centered_logo_html(logo_path: Path, width_px: int = 220) -> str:
         <div class="header-wrap">
             <div class="header-title">HazardBot by Zalemo👷‍♂️🎯</div>
             <div class="header-sub">
-                ype a hazard to review  incidents reported in the USA (OSHA Severe Injury Reports) 
+                Type a hazard to review similar incidents reported in the USA (OSHA Severe Injury Reports) 
                 and get prediction for Event Title, PPE, Training, Root Causes and OSHA reporting time.
             </div>
         </div>
@@ -194,8 +194,8 @@ if hazard_text:
             break
     res_df = pd.DataFrame(rows, columns=["description", "similarity"])
 
-   st.subheader("Similar incidents")
-   st.markdown(
+    st.subheader("Similar incidents")
+    st.markdown(
         '<span class="small-note">List ordered by similarity (highest first). Select one to get recommendations.</span>',
         unsafe_allow_html=True
     )
@@ -218,12 +218,11 @@ if hazard_text:
         label = fix_label(choice, pred_raw)
         nice_label = label.replace("_", " ").title()
 
-
         # Friendly blocks with emojis
-        st.markdown(f'<div class="block green">✅ <b>Predicted Event Title:</b> {label.capitalize()}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="block green">🚨 <b>Predicted Event Title:</b> {nice_label}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="block blue">🧤 <b>Recommended PPE:</b> {", ".join(ppe_map.get(label, ["N/A"]))}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="block blue">🎓 <b>Training Recommendations:</b> {", ".join(training_map.get(label, ["N/A"]))}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="block blue">🧩 <b>Possible Root Causes:</b> {", ".join(root_cause_map.get(label, ["N/A"]))}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="block blue">🔍 <b>Possible Root Causes:</b> {", ".join(root_cause_map.get(label, ["N/A"]))}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="block yellow">⏱️ <b>OSHA Reporting Time:</b> {osha_time_map.get(label, "24 hours")}</div>', unsafe_allow_html=True)
 
 # ===============================
