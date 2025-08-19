@@ -195,27 +195,29 @@ if hazard_text:
     res_df = pd.DataFrame(rows, columns=["description", "similarity"])
 
    st.subheader("Similar incidents")
-st.markdown('<span class="small-note">List ordered by similarity (highest first). Select one to get recommendations.</span>', unsafe_allow_html=True)
+    st.markdown(
+        '<span class="small-note">List ordered by similarity (highest first). Select one to get recommendations.</span>',
+        unsafe_allow_html=True
+    )
 
-# Dropdown compacto: muestra truncado en el menú, pero abajo mostramos el texto completo
-options = res_df.index.tolist()
-choice_idx = st.selectbox(
-    "Select an incident for analysis:",
-    options,
-    format_func=lambda i: truncate(res_df.at[i, "description"], 120)
-)
+    # Usar selectbox (mejor en móvil)
+    choice = st.selectbox(
+        "Select an incident for analysis:",
+        res_df["description"].tolist(),
+        index=0
+    )
 
-if choice_idx is not None:
-    choice_text = res_df.at[choice_idx, "description"]
+    # Mostrar descripción completa (debajo, más legible en celular)
+    st.markdown(
+        f'<div class="block blue"><b>Selected Incident:</b><br>{choice}</div>',
+        unsafe_allow_html=True
+    )
 
-    # Mostrar descripción completa (scroll-friendly en móvil)
-    st.markdown('<div class="small-note">Full incident description:</div>', unsafe_allow_html=True)
-    st.text_area("", value=choice_text, height=150, disabled=True)
+    if choice:
+        pred_raw = model.predict([choice])[0]
+        label = fix_label(choice, pred_raw)
+        nice_label = label.replace("_", " ").title()
 
-    # Predicción automática
-    pred_raw = model.predict([choice_text])[0]
-    label = fix_label(choice_text, pred_raw)
-    nice_label = label.replace("_", " ").title()
 
         # Friendly blocks with emojis
         st.markdown(f'<div class="block green">✅ <b>Predicted Event Title:</b> {label.capitalize()}</div>', unsafe_allow_html=True)
