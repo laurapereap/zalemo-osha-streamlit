@@ -4,7 +4,7 @@ import joblib
 from pathlib import Path
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import re
+import re, base64
 
 # ===============================
 # Page config + CSS
@@ -27,21 +27,39 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ===============================
-# Header (centered)
+# Header (centered + larger logo)
 # ===============================
-colL, colC, colR = st.columns([1,2,1])
-with colC:
-    st.image("zalemo_logo.png", width=160)  # ligeramente más pequeño
-    st.markdown(
-        '<div class="header-wrap"><div class="header-title">OSHA Hazard Assistant</div>'
-        '<div class="header-sub">Type a hazard, review similar incidents, and get prediction for Event Title, PPE, Training, Root Causes and OSHA reporting time.</div></div>',
-        unsafe_allow_html=True
-    )
+def centered_logo_html(logo_path: Path, width_px: int = 220) -> str:
+    try:
+        b64 = base64.b64encode(logo_path.read_bytes()).decode()
+        return f"""
+        <div class="header-wrap">
+            <img src="data:image/png;base64,{b64}" width="{width_px}" />
+            <div class="header-title">OSHA Hazard Assistant</div>
+            <div class="header-sub">
+                Type a hazard, review similar incidents, and get prediction for Event Title,
+                PPE, Training, Root Causes and OSHA reporting time.
+            </div>
+        </div>
+        """
+    except Exception:
+        # Fallback if logo not found
+        return """
+        <div class="header-wrap">
+            <div class="header-title">OSHA Hazard Assistant</div>
+            <div class="header-sub">
+                Type a hazard, review similar incidents, and get prediction for Event Title,
+                PPE, Training, Root Causes and OSHA reporting time.
+            </div>
+        </div>
+        """
+
+BASE = Path(__file__).resolve().parent
+st.markdown(centered_logo_html(BASE / "zalemo_logo.png", width_px=220), unsafe_allow_html=True)
 
 # ===============================
 # Load model & data
 # ===============================
-BASE = Path(__file__).resolve().parent
 OUT = BASE / "salidas_osha"
 
 @st.cache_resource
@@ -158,7 +176,7 @@ if hazard_text:
     rows, seen = [], set()
     for i in order:
         desc = df.iloc[i]["description"]
-        if desc in seen: 
+        if desc in seen:
             continue
         seen.add(desc)
         rows.append((desc, float(sims[i])))
@@ -169,8 +187,8 @@ if hazard_text:
     st.subheader("Similar incidents")
     st.markdown('<span class="small-note">List ordered by similarity (highest first). Select one to get recommendations.</span>', unsafe_allow_html=True)
 
-    # Radio list (scrolls automatically when long)
-    choice = st.radio("Select an incident for analysis:", res_df["description"].tolist(), index=0)
+    # Selectbox (dropdown with scroll)
+    choice = st.selectbox("Select an incident for analysis:", res_df["description"].tolist())
 
     if choice:
         pred_raw = model.predict([choice])[0]
