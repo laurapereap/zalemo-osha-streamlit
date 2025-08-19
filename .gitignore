@@ -20,3 +20,10 @@ __pycache__/
 
 # Colab / notebooks
 *.ipynb_checkpoints/
+
+# --- allow model artifacts ---
+!salidas_osha/*.joblib
+!salidas_osha/*.csv
+!salidas_osha/*.png
+!salidas_osha/*.txt
+!salidas_osha/*.json
