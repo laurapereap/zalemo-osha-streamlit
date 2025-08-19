@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.DS_Store
+
+# Streamlit cache
+.streamlit/thumbnails/
+.streamlit/config.toml
+
+# Data
+*.csv
+*.json
+*.joblib
+*.png
+*.jpg
+*.jpeg
+*.pdf
+
+# Colab / notebooks
+*.ipynb_checkpoints/
