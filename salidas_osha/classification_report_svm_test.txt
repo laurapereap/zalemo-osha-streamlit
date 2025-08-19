@@ -1,0 +1,16 @@
+                precision    recall  f1-score   support
+
+     caught_in      0.805     0.883     0.842      3584
+      chemical      0.913     0.941     0.927       626
+cut_laceration      0.786     0.550     0.647        20
+    electrical      0.929     0.968     0.948       282
+          fall      0.920     0.898     0.909      5821
+fire_explosion      0.660     0.639     0.649       155
+         other      0.674     0.565     0.614      1395
+  overexertion      0.776     0.789     0.783       171
+     struck_by      0.683     0.688     0.685      2298
+     transport      0.478     0.244     0.324        45
+
+      accuracy                          0.825     14397
+     macro avg      0.762     0.717     0.733     14397
+  weighted avg      0.823     0.825     0.823     14397

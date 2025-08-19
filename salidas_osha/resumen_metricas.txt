@@ -1,0 +1,7 @@
+VALID
+accuracy: 0.6891
+f1_macro: 0.5863
+
+TEST
+accuracy: 0.6858
+f1_macro: 0.5834
