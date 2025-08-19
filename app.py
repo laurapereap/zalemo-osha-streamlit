@@ -30,15 +30,18 @@ def load_model():
 
 @st.cache_resource
 def load_data():
-    df = pd.read_csv(OUT_DIR / "df_min.csv")
+    df = pd.read_csv(OUT_DIR / "df_min.csv", low_memory=False)
+    # Ensure we have a "description" column
+    if "final_narrative" in df.columns:
+        df = df.rename(columns={"final_narrative": "description"})
     if "description" not in df.columns:
-        st.error("⚠️ df_min.csv must have a column named 'description'")
+        st.error("⚠️ df_min.csv must have a column named 'final_narrative' or 'description'")
     return df
 
 model = load_model()
 df = load_data()
 
-# Vectorizer for similarity search
+# Build TF-IDF index for similarity search
 vectorizer = TfidfVectorizer(stop_words="english")
 tfidf_matrix = vectorizer.fit_transform(df["description"].astype(str))
 
@@ -90,7 +93,7 @@ if hazard_text:
     # Find top-N similar incidents
     hazard_vec = vectorizer.transform([hazard_text])
     sims = cosine_similarity(hazard_vec, tfidf_matrix).flatten()
-    top_idx = sims.argsort()[::-1][:10]
+    top_idx = sims.argsort()[::-1][:20]   # show top 20 instead of 10
     matches = df.iloc[top_idx][["description"]].copy()
     matches["similarity"] = sims[top_idx]
 
