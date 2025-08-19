@@ -1,133 +1,107 @@
-
 import streamlit as st
 import pandas as pd
-import numpy as np
 import joblib
-import json
 from pathlib import Path
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
-st.set_page_config(page_title="Zalemo • OSHA Incident Classifier", page_icon="🛡️", layout="wide")
+# -----------------------------
+# Config & Branding
+# -----------------------------
+st.set_page_config(
+    page_title="Zalemo • OSHA Hazard Assistant",
+    page_icon="🦺",
+    layout="wide"
+)
 
-# --- Paths
+st.image("zalemo_logo.png", width=200)
+st.title("OSHA Hazard Assistant")
+st.caption("Type a hazard, review similar incidents, and get prediction for Event Title, PPE, Training, Root Causes and OSHA reporting time.")
+
+# -----------------------------
+# Load models & data
+# -----------------------------
 BASE = Path(__file__).resolve().parent
 OUT_DIR = BASE / "salidas_osha"
 
-# --- Header / Branding
-col_logo, col_title = st.columns([1,5])
-with col_logo:
-    logo_path = BASE / "zalemo_logo.png"
-    if logo_path.exists():
-        st.image(str(logo_path), use_column_width=True)
-with col_title:
-    st.title("OSHA Incident Classifier")
-    st.caption("Predicción de **familia de accidente** a partir de la descripción.")
-
-# --- Utility to load models (joblib pipelines that already include TF-IDF)
 @st.cache_resource
-def load_model(model_filename: str):
-    model_path = OUT_DIR / model_filename
-    if not model_path.exists():
-        return None
-    try:
-        model = joblib.load(model_path)
-        return model
-    except Exception as e:
-        st.error(f"No se pudo cargar el modelo {model_filename}: {e}")
-        return None
+def load_model():
+    return joblib.load(OUT_DIR / "modelo_family_tfidf_logreg.joblib")
 
-# --- Sidebar
-st.sidebar.header("Opciones")
-available_models = [f.name for f in OUT_DIR.glob("*.joblib")]
-if not available_models:
-    st.sidebar.warning("Copia tus archivos *.joblib en **./salidas_osha**.")
-model_name = st.sidebar.selectbox("Modelo", options=available_models or ["(sin modelos)"])
+@st.cache_resource
+def load_data():
+    df = pd.read_csv(OUT_DIR / "df_min.csv")
+    if "description" not in df.columns:
+        st.error("⚠️ df_min.csv must have a column named 'description'")
+    return df
 
-# Try to load explainability terms if present
-top_terms = None
-top_terms_path = OUT_DIR / "top_terms_per_class.json"
-if top_terms_path.exists():
-    try:
-        with open(top_terms_path, "r", encoding="utf-8") as f:
-            top_terms = json.load(f)
-    except Exception as e:
-        st.sidebar.warning(f"No se pudieron leer los términos por clase: {e}")
+model = load_model()
+df = load_data()
 
-# --- Main prediction box
-st.subheader("Haz una predicción")
-default_text = "Employee slipped on wet floor and fell, injuring lower back and wrist."
-text = st.text_area("Descripción del incidente (inglés):", value=default_text, height=140)
+# Vectorizer for similarity search
+vectorizer = TfidfVectorizer(stop_words="english")
+tfidf_matrix = vectorizer.fit_transform(df["description"].astype(str))
 
-predict_btn = st.button("Predecir", use_container_width=True, type="primary")
-if predict_btn:
-    if model_name and model_name != "(sin modelos)":
-        model = load_model(model_name)
-        if model is not None:
-            try:
-                y_pred = model.predict([text])[0]
-                if hasattr(model, "predict_proba"):
-                    proba = model.predict_proba([text])[0]
-                    classes = getattr(model, "classes_", None)
-                else:
-                    # fallback: decision_function -> softmax-like
-                    classes = getattr(model, "classes_", None)
-                    proba = None
-                st.success(f"**Predicción:** {y_pred}")
-                if proba is not None and classes is not None:
-                    dfp = pd.DataFrame({"class": classes, "prob": proba}).sort_values("prob", ascending=False).head(5)
-                    st.bar_chart(dfp.set_index("class"))
-                # Show top terms for predicted class if available
-                if top_terms and y_pred in top_terms:
-                    st.markdown("**Términos más característicos (según el modelo):**")
-                    st.write(", ".join(top_terms[y_pred][:20]))
-            except Exception as e:
-                st.error(f"Error al predecir: {e}")
-    else:
-        st.warning("Selecciona un modelo en la barra lateral.")
+# -----------------------------
+# Dictionaries
+# -----------------------------
+ppe_map = {
+    "fall": ["Helmet", "Safety shoes", "Harness"],
+    "chemical": ["Gloves", "Goggles", "Apron", "Respirator"],
+    "fire_explosion": ["Fire-resistant clothing", "Face shield", "Gloves"],
+    "caught_in": ["Gloves", "Cut-resistant sleeves"],
+    "electrical": ["Insulated gloves", "Face shield", "Arc-rated clothing"],
+    "other": ["Gloves"],
+}
 
-st.divider()
+training_map = {
+    "fall": ["Fall protection training", "Working at heights"],
+    "chemical": ["HazCom training", "Chemical handling"],
+    "fire_explosion": ["Fire safety", "Explosion response"],
+    "caught_in": ["Machine guarding", "Lockout/Tagout"],
+    "electrical": ["Electrical safety (NFPA 70E)", "Arc flash training"],
+    "other": ["General safety awareness"],
+}
 
-# --- Metrics and artifacts
-st.subheader("Artefactos del modelo")
-col1, col2 = st.columns(2)
+root_cause_map = {
+    "fall": ["Slippery surfaces", "Lack of fall protection", "Poor housekeeping"],
+    "chemical": ["Improper labeling", "No PPE use", "Inadequate ventilation"],
+    "fire_explosion": ["Flammable storage issues", "Hot work without permit"],
+    "caught_in": ["Missing machine guard", "Improper lockout"],
+    "electrical": ["Exposed wires", "Overloaded circuits", "Improper grounding"],
+    "other": ["Human error", "Lack of supervision"],
+}
 
-with col1:
-    # Metrics comparison table
-    mcsv = OUT_DIR / "metricas_comparacion.csv"
-    if mcsv.exists():
-        dfm = pd.read_csv(mcsv)
-        st.markdown("**Comparación de modelos (valid/test)**")
-        st.dataframe(dfm, use_container_width=True)
-    else:
-        st.info("Sube **metricas_comparacion.csv** para ver el resumen.")
+osha_time_map = {
+    "fall": "24 hours",
+    "chemical": "8 hours",
+    "fire_explosion": "8 hours",
+    "electrical": "8 hours",
+    "caught_in": "24 hours",
+    "other": "24 hours",
+}
 
-    # Text metrics summary
-    mtxt = OUT_DIR / "resumen_metricas.txt"
-    if mtxt.exists():
-        st.markdown("**Resumen de métricas**")
-        st.code(mtxt.read_text(encoding="utf-8"), language="text")
+# -----------------------------
+# Input hazard
+# -----------------------------
+hazard_text = st.text_area("Describe the hazard:", placeholder="Example: Worker slipped on wet floor and fell...")
 
-with col2:
-    # Confusion matrix and F1 comparison images
-    img_paths = [
-        OUT_DIR / "matriz_confusion_svm_cal_test.png",
-        OUT_DIR / "comparacion_f1_test.png",
-    ]
-    for p in img_paths:
-        if p.exists():
-            st.image(str(p), caption=p.name, use_column_width=True)
+if hazard_text:
+    # Find top-N similar incidents
+    hazard_vec = vectorizer.transform([hazard_text])
+    sims = cosine_similarity(hazard_vec, tfidf_matrix).flatten()
+    top_idx = sims.argsort()[::-1][:10]
+    matches = df.iloc[top_idx][["description"]].copy()
+    matches["similarity"] = sims[top_idx]
 
-st.divider()
+    st.subheader("Similar incidents found")
+    selected = st.selectbox("Select an incident for analysis:", matches["description"].tolist())
 
-# --- Data preview (optional small file)
-st.subheader("Muestra de datos (opcional)")
-small_csv = OUT_DIR / "df_min.csv"
-if small_csv.exists():
-    try:
-        df_small = pd.read_csv(small_csv).head(200)
-        st.dataframe(df_small, use_container_width=True)
-    except Exception as e:
-        st.warning(f"No se pudo leer df_min.csv: {e}")
-else:
-    st.caption("Puedes incluir un subconjunto anónimo en **df_min.csv** (no obligatoria).")
+    if selected and st.button("Predict", use_container_width=True, type="primary"):
+        y_pred = model.predict([selected])[0]
 
-st.caption("© Zalemo — Demo académica (TFM).")
+        st.success(f"**Predicted Event Title:** {y_pred}")
+        st.info(f"**Recommended PPE:** {', '.join(ppe_map.get(y_pred, ['N/A']))}")
+        st.info(f"**Training Recommendations:** {', '.join(training_map.get(y_pred, ['N/A']))}")
+        st.info(f"**Possible Root Causes:** {', '.join(root_cause_map.get(y_pred, ['N/A']))}")
+        st.warning(f"**OSHA Reporting Time:** {osha_time_map.get(y_pred, '24 hours')}")
