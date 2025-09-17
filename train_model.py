@@ -258,7 +258,6 @@ sep("Crear splits estratificados")
 
 X = df_min["final_narrative"]   # texto principal
 
-# 👉 Elige la etiqueta:
 # y = df_min["eventtitle"]   # versión detallada (muchas clases)
 y = df_min["family"]          # versión simplificada (menos clases)
 
@@ -469,9 +468,7 @@ with open(report_path, "w") as f:
 print(f"Modelo guardado en: {model_path}")
 print(f"Métricas guardadas en: {report_path}")
 
-# =========================================
-# CELDA 12: COMPARACIÓN CON SVM
-# =========================================
+# COMPARACIÓN CON SVM
 from sklearn.svm import LinearSVC
 
 sep("Modelo TF-IDF + Linear SVM")
